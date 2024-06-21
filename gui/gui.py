@@ -1,3 +1,5 @@
+# imports
+# external modules
 import os
 import sys
 from base64 import b64decode
@@ -7,10 +9,13 @@ from bokeh.layouts import row, column
 from bokeh.models import Button
 from bokeh.models.widgets import FileInput
 
-sys.path.append('../src')
+# local modules
+sys.path.append(os.path.abspath('../src'))
 from hashi import Hashi
+sys.path.append(os.path.abspath('../solver'))
 import hashisolver
 
+# helper functions
 from hashiplot import makedummyplot
 from hashiplot import makehashiplot
 

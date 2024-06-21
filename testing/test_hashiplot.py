@@ -4,6 +4,7 @@ from bokeh.io import show
 
 sys.path.append('../src')
 from hashi import Hashi
+sys.path.append('../solver')
 import hashisolver
 sys.path.append('../gui')
 from hashiplot import makehashiplot

@@ -3,6 +3,7 @@ import sys
 
 sys.path.append('../src')
 from hashi import Hashi
+sys.path.append('../solver')
 import vertexsolver
 
 

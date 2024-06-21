@@ -1,9 +1,6 @@
 # external imports
 import numpy as np
 
-# local imports
-from hashi import Hashi
-
 
 def find_directions_to_connect(vertex):
     # helper function to fill_vertex.
