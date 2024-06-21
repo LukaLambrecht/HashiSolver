@@ -84,6 +84,19 @@ class Hashi(object):
             else: res[key] = [e]
         return res
 
+    def get_cluster(self, v, iterative=False, cluster=None):
+        # get a list of vertices that are connected to the given vertex
+        if cluster is None: cluster = [v]
+        new = []
+        for direction in v.directions_with_established_connection():
+            other = self.vertexcollection.find_vertex_in_direction(v, direction)
+            if other not in cluster:
+                cluster.append(other)
+                new.append(other)
+        if iterative:
+            for v2 in new: self.get_cluster(v2, iterative=True, cluster=cluster)
+        return cluster
+
     def has_potential_connection(self, v1, v2):
         # first check topology (without edges)
         if not self.vertexcollection.has_potential_connection(v1, v2): return False
@@ -106,6 +119,10 @@ class Hashi(object):
 
     def add_edge(self, v1, v2):
         if not self.has_potential_connection(v1, v2):
+            print('ERROR: invalid connection:')
+            print('Trying to make a connection between:')
+            print('  - {}'.format(v1))
+            print('  - {}'.format(v2))
             raise Exception('ERROR: invalid connection.')
         # make and add the edge and connections to vertices
         edge = Edge(v1.x, v1.y, v2.x, v2.y)

@@ -33,7 +33,7 @@ class Vertex(object):
 
     def has_established_connection(self, direction):
         # check if at least one connection in a given direction is established
-        return (self.n_connections(direction)>0)
+        return (self.n_established_connections(direction)>0)
 
     def n_potential_connections(self, direction):
         # cound number of potential connections in a given direction
