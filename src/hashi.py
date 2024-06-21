@@ -67,6 +67,23 @@ class Hashi(object):
         vertexcollection = VertexCollection.from_txt(txtfile)
         return Hashi(vertexcollection)
 
+    @staticmethod
+    def from_str(txt):
+        # constructor from string
+        vertexcollection = VertexCollection.from_str(txt)
+        return Hashi(vertexcollection)
+
+    def get_edges(self):
+        # get edges grouped by whether they connect the same vertices.
+        # returns a dict with keys of the form (x1, y1, x2, y2)
+        # and values which are lists of corresponding edges.
+        res = {}
+        for e in self.edges:
+            key = (e.x1, e.y1, e.x2, e.y2)
+            if key in res.keys(): res[key].append(e)
+            else: res[key] = [e]
+        return res
+
     def has_potential_connection(self, v1, v2):
         # first check topology (without edges)
         if not self.vertexcollection.has_potential_connection(v1, v2): return False

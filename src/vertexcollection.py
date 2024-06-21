@@ -28,12 +28,14 @@ class VertexCollection(object):
     @staticmethod
     def from_txt(txtfile):
         # static constructor from txt input file
+        with open(txtfile, 'r') as f: txt = f.read()
+        return VertexCollection.from_str(txt)
 
-        # read lines from txt file
-        with open(txtfile, 'r') as f:
-            lines = f.readlines()
-        lines = [line.strip(' \t\n') for line in lines]
-
+    @staticmethod
+    def from_str(txt):
+        # format lines
+        lines = [line.strip(' \t\n') for line in txt.split('\n')]
+        lines = [line for line in lines if len(line)!=0]
         # make collection of vertices
         idn = 0
         vertices = []
@@ -45,7 +47,6 @@ class VertexCollection(object):
                 v = Vertex(idn, x, y, n)
                 vertices.append(v)
                 idn += 1
-
         # return a VertexCollection object
         return VertexCollection(vertices)
 
