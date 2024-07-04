@@ -1,0 +1,1 @@
+# Example Hashi puzzles
