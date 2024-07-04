@@ -24,7 +24,7 @@ def close_connections(hashi):
                 n_closed += n_close
     return n_closed
 
-def close_connections_disjoint(hashi):
+def close_connections_disjoint(hashi, verbose=False):
     # dynamically close vertex connections,
     # based on the criterion that a connection that would create
     # a disjoint set of vertices disconnected from the rest is forbidden
@@ -54,15 +54,16 @@ def close_connections_disjoint(hashi):
             # it is not allowed and can be closed.
             if( vertex.n_potential_connections(direction)==1
                 and other_vertex.n_potential_connections(other_direction)==1 ):
-                print('Closing connections because of disjointness')
-                print('Current hashi:')
-                hashi.print()
-                print('Connections closed: {}, {}'.format(vertex, direction))
+                if verbose:
+                    print('Closing connections because of disjointness')
+                    print('Current hashi:')
+                    hashi.print()
+                    print('Connections closed: {}, {}'.format(vertex, direction))
                 vertex.close_n_connections(direction, 1, suppress_warnings=True)
                 other_vertex.close_n_connections(other_direction, 1, suppress_warnings=True)
 
 
-def solve(hashi):
+def solve(hashi, verbose=False):
     ### main solving method
 
     # vertex solver
@@ -73,4 +74,4 @@ def solve(hashi):
         for vertex in hashi.vertices:
             added_edges += vertexsolver.fill_vertex(hashi, vertex, repeat=True)
         close_connections(hashi)
-        close_connections_disjoint(hashi)
+        close_connections_disjoint(hashi, verbose=verbose)

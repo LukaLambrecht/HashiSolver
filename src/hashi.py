@@ -73,6 +73,16 @@ class Hashi(object):
         vertexcollection = VertexCollection.from_str(txt)
         return Hashi(vertexcollection)
 
+    @staticmethod
+    def from_dict(vdict):
+        # constructor from a dict of the form {(x,y): n, ...}
+        vertices = []
+        for i,((x,y),n) in enumerate(vdict.items()):
+            vertex = Vertex(i, x, y, n)
+            vertices.append(vertex)
+        vertexcollection = VertexCollection(vertices)
+        return Hashi(vertexcollection)
+
     def get_edges(self):
         # get edges grouped by whether they connect the same vertices.
         # returns a dict with keys of the form (x1, y1, x2, y2)

@@ -8,6 +8,7 @@ from bokeh.plotting import figure, show
 from bokeh.models import ColumnDataSource
 from bokeh.models import Circle
 from bokeh.models import Label, LabelSet
+from bokeh.models import TextInput
 
 
 def makedummyplot():
@@ -22,7 +23,7 @@ def makedummyplot():
     return fig
 
 
-def makehashiplot(hashi):
+def makehashiplot(hashi, n_editable=False):
     # extract x and y ranges
     maxx = max([v.x for v in hashi.vertices])
     maxy = max([v.y for v in hashi.vertices])
@@ -41,8 +42,12 @@ def makehashiplot(hashi):
                 line_color="#3288bd", fill_color="c", line_width=3)
     fig.add_glyph(source, circles)
     # add the expected number of connections for each vertex
-    labels = LabelSet(x='x', y='y', text='n', text_align='center', text_baseline='middle', source=source)
-    fig.add_layout(labels)
+    if not n_editable:
+        labels = LabelSet(x='x', y='y', text='n', text_align='center', text_baseline='middle', source=source)
+        fig.add_layout(labels)
+    # add the expected number of connections for each vertex - editable version
+    # (does not work yet)
+    else: pass
     # add lines for all edges
     for coords, edges in hashi.get_edges().items():
         # get correct coordinates
