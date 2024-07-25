@@ -3,6 +3,8 @@
 This GUI implementation uses [bokeh](https://bokeh.org/).
 It has the basic functionality of loading an input `.txt` encoding a Hashi puzzle and solving it.
 
+Note: for an alternative implementation not using the webbrowser-based `bokeh`, but rather the standard GUI toolkit `PyQt5`, see the `gui-pyqt5` folder instead.
+
 ### Prerequisites
 On top of the general prerequisites (see the [general instructions](https://github.com/LukaLambrecht/HashiSolver)), you'll need the `bokeh` package.
 Install it for example with `pip install bokeh`.
@@ -28,4 +30,4 @@ Then click the `Solve` button. If the puzzle can be solved, you will see somethi
 ![](../docs/gui/solved.png)
 
 ### Closing the GUI
-You can just close the browser window. But to stop the actual underlying process, use the `ctrl`+`c` keys (or alternatively `ctrl`+`z`, but in that case you won't be able to launch again until you close the terminal and open a new one).
+You can just close the browser window. But to stop the actual underlying process, use the `ctrl`+`c` keys (or alternatively `ctrl`+`z`, but in that case you won't be able to launch again until you close the terminal and open a new one, or manually free the socket used by this application).
