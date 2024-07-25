@@ -1,10 +1,13 @@
 import os
 import sys
+from bokeh.io import show
 
-sys.path.append('../src')
+sys.path.append('../../src')
 from hashi import Hashi
-sys.path.append('../solver')
+sys.path.append('../../solver')
 import hashisolver
+sys.path.append('../../gui')
+from hashiplot import makehashiplot
 
 
 if __name__=='__main__':
@@ -15,8 +18,13 @@ if __name__=='__main__':
     h.print()
     for v in h.vertices: print('  - {}'.format(v))
 
+    # plot the hashi
+    fig = makehashiplot(h)
+    show(fig)
+
     # solve the hashi
     hashisolver.solve(h)
-    h.print()
-    for v in h.vertices: print('  - {}'.format(v))
-    print('Complete: {}'.format(h.complete))
+
+    # and plot again
+    fig = makehashiplot(h)
+    show(fig)

@@ -1,10 +1,12 @@
 import numpy as np
 
 class Vertex(object):
+    # implementation of single vertex object.
+	# note: a Vertex has no knowledge of any topology or collection it might belong to,
+    #       it is only defined by its coordinates and local connections.
 
-    def __init__(self, idn, x, y, n, multiplicity=2):
+    def __init__(self, x, y, n, multiplicity=2, connections=None):
         # copy attributes
-        self.idn = idn
         self.x = x
         self.y = y
         self.n = n
@@ -14,14 +16,28 @@ class Vertex(object):
         # initialize list of connections
         # note: convention is [u1,u2,r1,r2,d1,d2,l1,12]
         # note: 0 = no connection, but connection allowed
-        #       1 = connection
+        #       1 = established connection
         #       -1 = no connection allowed
-        self.connections = np.zeros(4*multiplicity).astype(int)
+        if connections is not None:
+            # special case: connections are provided as argument
+            # (e.g. when copying an already partially solved vertex)
+            self.connections = connections.astype(int)
+            # check completion
+            if np.sum(self.connections==1)==self.n:
+                self.complete = True
+                # close all remaining connections for this vertex
+                self.connections = np.where(self.connections==0, -1, self.connections)
+        else:
+            # default case: all connections are initialized to 0 (allowed connection)
+            self.connections = np.zeros(4*multiplicity).astype(int)
 
     def __str__(self):
         infostr = 'Vertex (x: {}, y: {}, n: {}'.format(self.x, self.y, self.n)
         infostr += ', complete: {}, connections: {})'.format(self.complete, self.connections)
         return infostr
+    
+    def copy(self):
+        return Vertex(self.x, self.y, self.n, multiplicity=self.multiplicity, connections=np.copy(self.connections))
 
     def get_connections(self, direction):
         return self.connections[self.multiplicity*direction : self.multiplicity*(direction+1)]
@@ -52,6 +68,10 @@ class Vertex(object):
     def has_closed_connection(self, direction):
         # check if at least one connection in a given direction is closed
         return (self.n_closed_connections(direction)>0)
+    
+    def n_missing_connections(self):
+        # check how many connections are still missing for this vertex
+        return self.n - np.sum(self.connections==1)
 
     def directions_with_established_connection(self):
         return [d for d in [0,1,2,3] if self.has_established_connection(d)]
