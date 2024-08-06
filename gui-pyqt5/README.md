@@ -4,7 +4,7 @@ This serves as an alternative for the `bokeh` based approach (see the `gui-bokeh
 
 ### Prerequisites
 On top of the general prerequisites (see the [general instructions](https://github.com/LukaLambrecht/HashiSolver)), you'll need the `matplotlib` and `PyQt5` packages.
-The former can be installed with (for example) `pip3 install matplotlib`, and the latter with `pip3 install 'PyQt5<5.15` (the version restriction seems to be needed to avoid conflicts).
+The former can be installed with (for example) `pip3 install matplotlib`, and the latter with `pip3 install 'PyQt5<5.15'` (the version restriction seems to be needed to avoid conflicts).
 
 ### Preparing the input
 You'll need your Hashi puzzle to solve in the form of a `.txt` file.
