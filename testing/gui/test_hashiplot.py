@@ -8,7 +8,7 @@ sys.path.append('../../src')
 from hashi import Hashi
 sys.path.append('../../solver')
 import hashisolver
-#sys.path.append('../../gui') # bokeh version
+#sys.path.append('../../gui-bokeh') # bokeh version
 #from hashiplot import makehashiplot # bokeh version
 sys.path.append('../../gui-pyqt5') # matplotlib version
 from hashiplot import makehashiplot # matplotlib version

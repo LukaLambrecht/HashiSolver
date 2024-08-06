@@ -2,7 +2,7 @@ import os
 import sys
 from bokeh.io import curdoc
 
-sys.path.append('../../gui')
+sys.path.append('../../gui-bokeh')
 from gui import HashiSolverGui
 
 
