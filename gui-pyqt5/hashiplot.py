@@ -6,7 +6,9 @@ from matplotlib.figure import Figure
 
 def makedummyplot():
     fig, ax = plt.subplots()
-    ax.text(0.5, 0.5, 'Welcome to HashiSolver', ha='center', va='center', transform=ax.transAxes)
+    ax.set_axis_off()
+    ax.text(0.5, 0.5, 'Welcome to HashiSolver!', ha='center', va='center', transform=ax.transAxes,
+            fontsize=15)
     return (fig, ax)
 
 def makehashiplot(hashi, fig=None, ax=None):
@@ -15,10 +17,11 @@ def makehashiplot(hashi, fig=None, ax=None):
     maxy = max([v.y for v in hashi.vertices])
     # create the figure
     if fig is None or ax is None: fig, ax = plt.subplots()
+    ax.get_xaxis().set_ticks([])
+    ax.get_yaxis().set_ticks([])
     ax.set_xlim((-0.5, maxx+0.5))
     ax.set_ylim((-0.5, maxy+0.5))
-    #fig.xaxis.visible = False
-    #fig.yaxis.visible = False
+    ax.set_aspect('equal')
     # add a circle for each vertex
     for vertex in hashi.vertices:
         facecolor = 'lightskyblue' if vertex.complete else 'white'
