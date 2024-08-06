@@ -14,7 +14,7 @@ You'll need your Hashi puzzle to solve in the form of a `.txt` file.
 Use a single digit (the number of connection to make) for each vertex, and a dash (`-`) for positions without a vertex.
 Consider the following example:
 
-![](docs/main/unsolved.png)
+<img src="docs/main/unsolved.png" width="200">
 
 The corresponding `.txt` file would look like this:
 
@@ -73,10 +73,10 @@ Complete: True
 
 which in turn corresponds to the following solved puzzle:
 
-![](docs/main/solved.png)
+<img src="docs/main/solved.png" width="200">
 
 ### Using the graphical interface
-See the dedicated instructions in the `gui-bokeh` or `gui-pyqt5` folders.
+See the dedicated instructions in the [gui-bokeh](gui-bokeh) or [gui-pyqt5](gui-pyqt5) folders.
 
 ### Using images instead of txt files as input
 To do
