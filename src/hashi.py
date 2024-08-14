@@ -93,11 +93,27 @@ class Hashi(object):
     def from_dict(vdict):
         # constructor from a dict of the form {(x,y): n, ...}
         vertices = []
-        for i,((x,y),n) in enumerate(vdict.items()):
-            vertex = Vertex(i, x, y, n)
+        for (x,y),n in vdict.items():
+            vertex = Vertex(x, y, n)
             vertices.append(vertex)
         return Hashi(vertices)
-    
+
+    def to_str(self):
+        # reverse operation with respect to from_str,
+        # i.e. make string representation suitable for writing to file
+        # (note: edges are ignored, mostly used for empty hashis)
+        offsetx = min([v.x for v in self.vertices])
+        offsety = min([v.y for v in self.vertices])
+        maxx = max([v.x for v in self.vertices]) - offsetx
+        maxy = max([v.y for v in self.vertices]) - offsety
+        chars = [['-']*(maxx+1)]*(maxy+1)
+        chars = np.array(chars)
+        for v in self.vertices:
+            chars[len(chars)-1-(v.y-offsety)][v.x-offsetx] = str(v.n)
+        lines = [''.join(linechars) for linechars in chars]
+        txt = '\n'.join(lines)
+        return txt
+
     def make_topology(self):
         # make the topology for the provided list of vertices
         # note: this function is primarily meant to run on a list of vertices

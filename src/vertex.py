@@ -2,7 +2,7 @@ import numpy as np
 
 class Vertex(object):
     # implementation of single vertex object.
-	# note: a Vertex has no knowledge of any topology or collection it might belong to,
+    # note: a Vertex has no knowledge of any topology or collection it might belong to,
     #       it is only defined by its coordinates and local connections.
 
     def __init__(self, x, y, n, multiplicity=2, connections=None):
