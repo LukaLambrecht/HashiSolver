@@ -1,5 +1,6 @@
 import os
 import sys
+from PyQt5 import QtCore
 from PyQt5.QtWidgets import QApplication, QMainWindow
 from PyQt5.QtWidgets import QWidget, QGridLayout
 from PyQt5.QtWidgets import QPushButton
@@ -53,6 +54,11 @@ class HashiBuilderWindow(QWidget):
 
         (self.dgrid, self.dgrid_layout) = self.make_digit_grid()
 
+        introtxt = 'Fill the number of connections for each vertex in the grid below.'
+        introtxt += ' Grid positions where no vertex should go, can be left empty.'
+        general_label = QLabel(introtxt)
+        general_label.setWordWrap(True)
+
         buttons_layout = QGridLayout()
         self.ok_button = QPushButton('Ok')
         buttons_layout.addWidget(self.ok_button, 0, 0)
@@ -64,8 +70,9 @@ class HashiBuilderWindow(QWidget):
         buttons_layout.addWidget(self.image_button, 0, 2)
         
         self.main_layout = QGridLayout()
-        self.main_layout.addLayout(self.dgrid_layout, 0, 0)
-        self.main_layout.addLayout(buttons_layout, 1, 0)
+        self.main_layout.addWidget(general_label, 0, 0)
+        self.main_layout.addLayout(self.dgrid_layout, 1, 0)
+        self.main_layout.addLayout(buttons_layout, 2, 0)
         
         self.setLayout(self.main_layout)
 
@@ -76,6 +83,9 @@ class HashiBuilderWindow(QWidget):
             dgrid.append([])
             for j in range(ncols):
                 textbox = QLineEdit()
+                textbox.setMaxLength(1)
+                textbox.setFixedWidth(40)
+                textbox.setAlignment(QtCore.Qt.AlignCenter)
                 dgrid[i].append(textbox)
                 dgrid_layout.addWidget(textbox, i, j)
         return (dgrid, dgrid_layout)
@@ -108,11 +118,15 @@ class HashiBuilderWindow(QWidget):
         self.change_size(nrows=nrows, ncols=ncols)
 
     def change_size(self, nrows=7, ncols=7):
+        for i in range(len(self.dgrid)):
+            for j in range(len(self.dgrid[i])):
+                self.dgrid[i][j].hide()
         self.main_layout.removeItem(self.dgrid_layout)
         self.dgrid_layout.deleteLater()
         del self.dgrid_layout
+        del self.dgrid
         (self.dgrid, self.dgrid_layout) = self.make_digit_grid(nrows=nrows, ncols=ncols)
-        self.main_layout.addLayout(self.dgrid_layout, 0, 0)
+        self.main_layout.addLayout(self.dgrid_layout, 1, 0)
         self.main_layout.update()
         
     def choose_image(self, event):
