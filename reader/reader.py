@@ -12,6 +12,15 @@ from hashi import Hashi
 from digitreco import digitreco
 
 
+def find_internal_groups(data):
+    ### helper function
+    ids = np.where(data)[0]
+    groups = np.split(ids, np.where(np.diff(ids)!=1)[0] + 1)
+    if 0 in groups[0]: groups = groups[1:]
+    if len(data)-1 in groups[-1]: groups = groups[:-1]
+    return len(groups)
+
+
 class HashiImageReader(object):
     ### class for reading a Hashi puzzle from an image
     # for now, only works on 'nice' images, i.e.:
@@ -40,6 +49,16 @@ class HashiImageReader(object):
         self.image = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
         self.image = np.where(self.image>128,0,1)
         self.image = self.image.astype(np.uint8)
+        # use vertical and horizontal strips of whitespace
+        # to derive the number of rows and columns
+        # note: does not work as some hashi images
+        #       do not have whitespace between rows and columns...
+        #white_strips_vertical = np.all(self.image==0, axis=0)
+        #white_strips_horizontal = np.all(self.image==0, axis=1)
+        #ncols = find_internal_groups(white_strips_vertical)
+        #nrows = find_internal_groups(white_strips_horizontal)
+        #print(nrows)
+        #print(ncols)
         # remove whitespace
         self.image = self.image[~np.all(self.image==0, axis=1),:]
         self.image = self.image[:,~np.all(self.image==0, axis=0)]
