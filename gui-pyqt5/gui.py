@@ -11,6 +11,7 @@ from PyQt5.QtWidgets import QPushButton
 from PyQt5.QtWidgets import QFileDialog
 
 from hashiplot import makedummyplot, makehashiplot
+from hashibuilder import HashiBuilderWindow
 sys.path.append(os.path.abspath('../src'))
 from hashi import Hashi
 sys.path.append(os.path.abspath('../solver'))
@@ -37,9 +38,12 @@ class HashiSolverGui(QMainWindow):
         self.load_button = QPushButton('Load')
         self.load_button.clicked.connect(self.load)
         buttons_layout.addWidget(self.load_button, 0, 0)
+        self.build_button = QPushButton('Build')
+        self.build_button.clicked.connect(self.open_build_window)
+        buttons_layout.addWidget(self.build_button, 0, 1)
         self.solve_button = QPushButton('Solve')
         self.solve_button.clicked.connect(self.solve)
-        buttons_layout.addWidget(self.solve_button, 0, 1)
+        buttons_layout.addWidget(self.solve_button, 0, 2)
         
         self.mplcanvas = MplCanvas()
         
@@ -56,6 +60,19 @@ class HashiSolverGui(QMainWindow):
         inputfile, _ = QFileDialog.getOpenFileName(self, 'some text', '../fls', '(*.txt)')
         if inputfile == '': return
         self.hashi = Hashi.from_txt(inputfile)
+        self.redraw()
+
+    def open_build_window(self, event):
+        # note: buildwindow must be an attribute of self
+        #       for the showing of the second window to work
+        self.buildwindow = HashiBuilderWindow()
+        self.buildwindow.ok_button.clicked.connect(self.build_hashi)
+        self.buildwindow.show()
+
+    def build_hashi(self, event):
+        self.hashi = self.buildwindow.make_hashi()
+        self.buildwindow.close()
+        del self.buildwindow
         self.redraw()
         
     def solve(self, event):
@@ -74,7 +91,7 @@ def main():
    app.setQuitOnLastWindowClosed(True)
    window = HashiSolverGui()
    window.show()
-   sys.exit(app.exec_())
+   sys.exit(app.exec())
    
 if __name__ == '__main__':
    main()
