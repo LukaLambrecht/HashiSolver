@@ -42,13 +42,13 @@ def makehashiplot(hashi, fig=None, ax=None):
         elif len(edges)==2:
             if edges[0].horizontal:
                 coords = [
-                  [coords[0]+0.4, coords[1]-0.05, coords[2]-0.4, coords[3]-0.05],
-                  [coords[0]+0.4, coords[1]+0.05, coords[2]-0.4, coords[3]+0.05]
+                  [coords[0]+0.4, coords[1]-0.07, coords[2]-0.4, coords[3]-0.07],
+                  [coords[0]+0.4, coords[1]+0.07, coords[2]-0.4, coords[3]+0.07]
                 ]
             elif edges[1].vertical:
                 coords = [
-                  [coords[0]-0.05, coords[1]+0.4, coords[2]-0.05, coords[3]-0.4],
-                  [coords[0]+0.05, coords[1]+0.4, coords[2]+0.05, coords[3]-0.4]
+                  [coords[0]-0.07, coords[1]+0.4, coords[2]-0.07, coords[3]-0.4],
+                  [coords[0]+0.07, coords[1]+0.4, coords[2]+0.07, coords[3]-0.4]
                 ]
             else: raise Exception('Not yet implemented.')
         else: raise Exception('Not yet implemented.')

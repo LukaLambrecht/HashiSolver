@@ -4,21 +4,12 @@ import sys
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
-import matplotlib.patches as patches
+from matplotlib.patches import Rectangle
 
 sys.path.append(os.path.abspath('../src'))
 from hashi import Hashi
 
 from digitreco import digitreco
-
-
-def find_internal_groups(data):
-    ### helper function
-    ids = np.where(data)[0]
-    groups = np.split(ids, np.where(np.diff(ids)!=1)[0] + 1)
-    if 0 in groups[0]: groups = groups[1:]
-    if len(data)-1 in groups[-1]: groups = groups[:-1]
-    return len(groups)
 
 
 class HashiImageReader(object):
@@ -49,16 +40,6 @@ class HashiImageReader(object):
         self.image = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
         self.image = np.where(self.image>128,0,1)
         self.image = self.image.astype(np.uint8)
-        # use vertical and horizontal strips of whitespace
-        # to derive the number of rows and columns
-        # note: does not work as some hashi images
-        #       do not have whitespace between rows and columns...
-        #white_strips_vertical = np.all(self.image==0, axis=0)
-        #white_strips_horizontal = np.all(self.image==0, axis=1)
-        #ncols = find_internal_groups(white_strips_vertical)
-        #nrows = find_internal_groups(white_strips_horizontal)
-        #print(nrows)
-        #print(ncols)
         # remove whitespace
         self.image = self.image[~np.all(self.image==0, axis=1),:]
         self.image = self.image[:,~np.all(self.image==0, axis=0)]
@@ -82,19 +63,91 @@ class HashiImageReader(object):
         if doplot: plt.show(block=False)
         return (fig,ax)
 
-    def findsize(self):
-        # to do...
-        pass
-
-    def hashidict(self):
+    def findsize(self, verbose=False):
         if self.image is None: raise Exception('Current image is None')
-        if self.nrows is None or self.ncols is None:
-            #self.findsize()
-            msg = 'ERROR in HashiImageReader.hashidict:'
-            msg += ' for now, the expected size of the hashi must be set'
-            msg += ' manually in the nrows and ncols attributes'
-            msg += ' (automatic derivation of the size not yet implemented).'
+        # find connected components using cv2
+        img = np.copy(self.image)
+        img = np.ascontiguousarray(img, dtype=np.uint8)
+        n_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(img)
+        if len(stats)==0:
+            msg = 'ERROR in HashiImageReader.findsize:'
+            msg += ' no centroids could be found in the input image.'
             raise Exception(msg)
+        # make image for debugging
+        if verbose:
+            fig,ax = self.drawimage(doplot=False)
+            for i in range(1, n_labels):
+                x = stats[i, cv2.CC_STAT_LEFT]
+                y = stats[i, cv2.CC_STAT_TOP]
+                w = stats[i, cv2.CC_STAT_WIDTH]
+                h = stats[i, cv2.CC_STAT_HEIGHT]
+                rectangle = Rectangle((x, y), w, h,
+                        fill=False, edgecolor='r', linewidth=2,
+                        clip_on=False)
+                ax.add_patch(rectangle)
+            ax.text(0.02, 1.02, 'Connected components before filtering',
+                    ha='left', va='bottom', transform=ax.transAxes,
+                    fontsize=13)
+            plt.show(block=False)
+        # filter clusters based on shape and size
+        ws = np.array([stats[i, cv2.CC_STAT_WIDTH] for i in range(len(stats))])
+        hs = np.array([stats[i, cv2.CC_STAT_HEIGHT] for i in range(len(stats))])
+        mask = np.ones(len(stats)).astype(bool)
+        mask = mask & (ws < img.shape[1]*0.9) & (hs < img.shape[0]*0.9)
+        aspect_ratio = np.divide(ws, hs)
+        mask = mask & (aspect_ratio>0.9) & (aspect_ratio<1.1)
+        maxw = np.max(ws[mask])
+        maxh = np.max(hs[mask])
+        mask = mask & (ws/maxw > 0.9) & (hs/maxh > 0.9)
+        centroids = centroids[mask]
+        # make image for debugging
+        if verbose:
+            fig,ax = self.drawimage(doplot=False)
+            indices = np.array(list(range(n_labels)))[mask]
+            for i in indices:
+                x = stats[i, cv2.CC_STAT_LEFT]
+                y = stats[i, cv2.CC_STAT_TOP]
+                w = stats[i, cv2.CC_STAT_WIDTH]
+                h = stats[i, cv2.CC_STAT_HEIGHT]
+                rectangle = Rectangle((x, y), w, h,
+                        fill=False, edgecolor='r', linewidth=2,
+                        clip_on=False)
+                ax.add_patch(rectangle)
+            ax.text(0.02, 1.02, 'Connected components after filtering',
+                    ha='left', va='bottom', transform=ax.transAxes,
+                    fontsize=13)
+            plt.show(block=False)
+        # check if any connected components remain
+        if len(centroids)==0:
+            msg = 'ERROR in HashiImageReader.findsize:'
+            msg += ' no centroids remain after filtering.'
+            raise Exception(msg)
+        # determine row height and column width from centroids
+        centroids_x = sorted(centroids[:,0])
+        centroids_y = sorted(centroids[:,1])
+        diff_x = np.diff(centroids_x)
+        diff_y = np.diff(centroids_y)
+        width_x = np.mean(diff_x[diff_x>5])
+        width_y = np.mean(diff_y[diff_y>5])
+        # determine number of rows and columns
+        self.nrows = int(round(img.shape[0]/width_x))
+        self.ncols = int(round(img.shape[1]/width_y))
+        # do printout
+        if verbose:
+            msg = 'INFO in HashiImageReader.findsize:\n'
+            msg += '  number of rows:\n'
+            msg += '    mean difference between centroids: {}\n'.format(width_x)
+            msg += '    total image height: {}\n'.format(img.shape[0])
+            msg += '    -> number of rows: {}\n'.format(self.nrows)
+            msg += '  number of columns:\n'
+            msg += '    mean difference between centroids: {}\n'.format(width_y)
+            msg += '    total image width: {}\n'.format(img.shape[1])
+            msg += '    -> number of columns: {}'.format(self.ncols)
+            print(msg)
+
+    def hashidict(self, verbose=False):
+        if self.image is None: raise Exception('Current image is None')
+        if self.nrows is None or self.ncols is None: self.findsize(verbose=verbose)
         # initialize output
         res = {}
         # read digit images
@@ -130,7 +183,7 @@ class HashiImageReader(object):
                 mask = dist <= center[0]*0.8
                 imgcell = np.where(mask, imgcell, 0)
                 # read digit
-                n = digitreco(imgcell, references=dimages, doplot=False)
+                n = digitreco(imgcell, references=dimages, doplot=verbose)
                 if n is not None: res[(j, self.ncols-i-1)] = n
         return res
 
@@ -138,17 +191,14 @@ class HashiImageReader(object):
 if __name__=='__main__':
 
     imfile = sys.argv[1]
-    hsize = tuple([int(el) for el in sys.argv[2].split(',')])
 
     HIR = HashiImageReader()
     HIR.loadimage(imfile)
-    #fig,ax = HIR.drawimage(doplot=False)
-
-    HIR.nrows = hsize[0]
-    HIR.ncols = hsize[1]
-    vertices = HIR.hashidict()
+    fig,ax = HIR.drawimage(doplot=False)
+    HIR.findsize(verbose=True)
+    vertices = HIR.hashidict(verbose=True)
     hashi = Hashi.from_dict(vertices)
     hashi.print()
     print(hashi.to_str())
 
-    plt.show()
+    plt.show(block=True)

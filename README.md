@@ -76,7 +76,8 @@ which in turn corresponds to the following solved puzzle:
 <img src="docs/main/solved.png" width="200">
 
 ### Using the graphical interface
-See the dedicated instructions in the [gui-bokeh](gui-bokeh) or [gui-pyqt5](gui-pyqt5) folders.
+See the dedicated instructions in the [gui-pyqt5](gui-pyqt5) folder (or an alternative implementation in the [gui-bokeh](gui-bokeh) folder, but no longer recommended).
 
 ### Using images instead of txt files as input
-To do
+It is possible to use an image (e.g. a screenshot) as input, instead of preparing the `.txt` file as explained above.
+However, this feature does not yet work perfectly, and it is recommended to run it in the interactive mode to be able to make modifications (see instructions in the [gui-pyqt5](gui-pyqt5) folder).

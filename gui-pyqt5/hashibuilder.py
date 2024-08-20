@@ -7,10 +7,8 @@ from PyQt5.QtWidgets import QPushButton
 from PyQt5.QtWidgets import QFileDialog
 from PyQt5.QtWidgets import QLabel, QLineEdit
 
-sys.path.append(os.path.abspath('../src'))
+sys.path.append(os.path.join(os.path.dirname(__file__),'../src'))
 from hashi import Hashi
-sys.path.append(os.path.abspath('../reader'))
-from reader import HashiImageReader
 
 
 class PickSizeWindow(QWidget):
@@ -130,15 +128,15 @@ class HashiBuilderWindow(QWidget):
         self.main_layout.update()
         
     def choose_image(self, event):
+        sys.path.append(os.path.join(os.path.dirname(__file__),'../reader'))
+        from reader import HashiImageReader
         # choose file
         inputfile, _ = QFileDialog.getOpenFileName(self, 'Choose image', '../fls', '')
         if inputfile == '': return
         # read file into hashi vertices
         HIR = HashiImageReader()
         HIR.loadimage(inputfile)
-        HIR.nrows = 11 # to make automatic / interactive
-        HIR.ncols = 11 # to make automatic / interactive
-        vertices = HIR.hashidict()
+        vertices = HIR.hashidict(verbose=False)
         # update interactive display
         self.change_size(nrows=HIR.nrows, ncols=HIR.ncols)
         for (xcoord,ycoord),n in vertices.items():
