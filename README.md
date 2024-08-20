@@ -6,8 +6,9 @@ Required:
 - `numpy`
 
 Optional:
-- `bokeh` (for the graphical interface)
-- `matplotlib` and `PyQt5` (for an alternative graphical interface)
+- `matplotlib` and `PyQt5` (for the graphical interface)
+- `bokeh` (for an alternative graphical interface)
+- `opencv-python` (for using images as input)
 
 ### Preparing the input
 You'll need your Hashi puzzle to solve in the form of a `.txt` file.
