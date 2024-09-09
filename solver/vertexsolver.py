@@ -69,7 +69,7 @@ def fill_vertex(hashi, vertex, repeat=False, verbose=False):
 
     # make the connections
     for direction in directions:
-        other_vertex = hashi.find_vertex_in_direction(vertex, direction)
+        other_vertex = vertex.neighbours[direction]
         if other_vertex is None: raise Exception('ERROR: something went wrong')
         hashi.add_edge(vertex, other_vertex)
         added_edges.append((vertex, other_vertex))

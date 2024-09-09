@@ -3,21 +3,39 @@ import numpy as np
 
 # local imports
 from vertex import Vertex
+from cluster import Cluster
 from edge import Edge
 
 
 class Hashi(object):
 
-    def __init__(self, vertices, do_make_topology=True):
+    def __init__(self, vertices):
         # default constructor from list of vertices
         # set basic attributes
         self.vertices = vertices
         self.nvertices = len(vertices)
         self.edges = []
         self.complete = False
+        # determine correct neighbours
+        # (i.e. topologically connected vertices)
+        for vertex in self.vertices:
+            for direction in [0,1,2,3]:
+                # find neighbour in list of provided vertices
+                neighbour = vertex.find_closest(vertices, direction)
+                vertex.neighbours[direction] = neighbour
+        # initialize clusters
+        # note: initally, none of the vertices have a connection,
+        #       so each vertex represents its own cluster;
+        #       they will be gradually merged into only one cluster
+        #       when fully solved.
+        self.clusters = [Cluster(vertices=[v]) for v in vertices]
+        self.cluster_lookup_table = {}
+        for idx in range(len(vertices)): self.cluster_lookup_table[idx] = self.clusters[idx]
         # initialize topology
-        self.topology = -np.ones((self.nvertices,self.nvertices))
-        if do_make_topology: self.make_topology()
+        # note: this needs to be done after setting the neighbours,
+        #       since the topology matrix is defined based on those neighbours
+        self.topology = -np.ones((self.nvertices, self.nvertices))
+        self.make_topology()
 
     def __str__(self):
         # basic printing
@@ -123,45 +141,22 @@ class Hashi(object):
         #       (maybe to revisit later if the need arises).
 
         # loop over vertices
-        for vidx, v in enumerate(self.vertices):
+        for vidx, vertex in enumerate(self.vertices):
             # check if some connections were already closed or established
-            if -1 in v.connections: raise Exception('ERROR: found already closed connection.') 
-            if 1 in v.connections: raise Exception('ERROR: found already established connection.')
-            # for this vertex, make collection of all other vertices in the collection
-            otherids = [idx for idx in range(len(self.vertices)) if idx!=vidx]
-            othervertices = [self.vertices[idx] for idx in otherids]
+            if -1 in vertex.connections: raise Exception('ERROR: found already closed connection.') 
+            if 1 in vertex.connections: raise Exception('ERROR: found already established connection.')
             # loop over the directions
             for direction in [0,1,2,3]:
-                # find other vertices in the given direction
-                candidates = [v2 for v2 in othervertices if v2.is_in_direction(v, direction)]
+                # neighbour in the given direction
+                neighbour = vertex.neighbours[direction]
                 # if none, close the corresponding connections and continue
-                if len(candidates)==0:
-                    v.close_connections(direction)
+                if neighbour is None:
+                    vertex.close_connections(direction)
                     continue
-                # if one or multiple, find the closest one
-                closest = v.find_closest(candidates, direction)
                 # set the topological connection as allowed
-                self.topology[self.vertices.index(v), self.vertices.index(closest)] = 0
-                self.topology[self.vertices.index(closest), self.vertices.index(v)] = 0
-    
-    def subset(self, vids):
-        # make a new Hashi that is a subset of the current one
-        # (including potential partial solving so far)
-        
-        # define subset of vertices and make a new hashi with those
-        vertices = [self.vertices[vidx].copy() for vidx in vids]
-        sub = Hashi(vertices, do_make_topology=False)
-        # set topology
-        topology = self.topology
-        topology = topology[:,vids]
-        topology = topology[vids,:]
-        sub.topology = topology
-        # copy all edges that are fully within the subset of vertices
-        # (not the ones that connect vertices outside the subset)
-        for edge in self.edges:
-            if edge.connects([self.vertices[vidx] for vidx in vids]):
-                sub.edges.append(edge.copy())
-        return sub
+                nidx = self.vertices.index(neighbour)
+                self.topology[vidx, nidx] = 0
+                self.topology[nidx, vidx] = 0
     
     def get(self, v):
         # auxiliary function for vertex/index conversion
@@ -189,31 +184,31 @@ class Hashi(object):
             else: res[key] = [e]
         return res
 
-    def get_cluster(self, v, iterative=False, cluster=None):
+    def get_cluster(self, v, iterative=False):
         # get a list of vertices that are connected to the given vertex
         vidx, v = self.get(v)
-        if cluster is None: cluster = [v]
-        new = []
-        for direction in v.directions_with_established_connection():
-            other = self.find_vertex_in_direction(v, direction)
-            if other not in cluster:
-                cluster.append(other)
-                new.append(other)
-        if iterative:
-            for v2 in new: self.get_cluster(v2, iterative=True, cluster=cluster)
-        cluster_ids = [self.vertices.index(v2) for v2 in cluster]
-        return (cluster_ids, cluster)
+        cluster_ids = []
+        cluster_vertices = []
+        # case of non-iterative: just check which of the neighbours are connected
+        if not iterative:
+            for otheridx, othervertex in enumerate(self.vertices):
+                if v.is_connected_with(othervertex):
+                    cluster_ids.append(otheridx)
+                    cluster_vertices.append(othervertex)
+        # iterative case: find correct cluster
+        else:
+            cluster = self.cluster_lookup_table[vidx]
+            for otheridx, othervertex in enumerate(self.vertices):
+                if self.cluster_lookup_table[otheridx]==cluster:
+                    cluster_ids.append(otheridx)
+                    cluster_vertices.append(othervertex)
+        return (cluster_ids, cluster_vertices)
 
     def has_potential_connection(self, v1, v2):
+        ### check if a connection between v1 and v2 could be made
         v1idx, v1 = self.get(v1)
         v2idx, v2 = self.get(v2)
-        # first check potential connection in topology
-        if self.topology[v1idx, v2idx]==-1: return False
-        # then check connections in the relevant direction
-        # note: this implicitly also takes into account edges, see add_edge.
-        if not v1.has_potential_connection(v2.direction(v1)): return False
-        if not v2.has_potential_connection(v1.direction(v2)): return False
-        return True
+        return v1.can_connect_with(v2)
 
     def make_potential_edges(self):
         # returns a list of all currently potential edges
@@ -236,13 +231,24 @@ class Hashi(object):
             print('  - {}'.format(v1))
             print('  - {}'.format(v2))
             raise Exception('ERROR: invalid connection.')
-        # make and add the edge and connections to vertices
+        # make and add the edge
         edge = Edge(v1.x, v1.y, v2.x, v2.y)
         self.edges.append(edge)
+        # modify topology matrix
         self.topology[v1idx, v2idx] += 1
         self.topology[v2idx, v1idx] += 1
+        # modify vertex connections
         v1.add_connection(v2.direction(v1))
         v2.add_connection(v1.direction(v2))
+        # merge clusters
+        c1 = self.cluster_lookup_table[v1idx]
+        c2 = self.cluster_lookup_table[v2idx]
+        if c1 != c2:
+            c1.add_cluster(c2)
+            for vidx in range(len(self.vertices)):
+                if self.cluster_lookup_table[vidx] == c2:
+                    self.cluster_lookup_table[vidx] = c1
+            self.clusters.remove(c2)
         # close all potential connections crossing the newly added edge
         for test_edge, test_v1idx, test_v1, test_v2idx, test_v2 in self.make_potential_edges():
             if( test_v1idx==v1idx or test_v1idx==v2idx 
@@ -259,15 +265,3 @@ class Hashi(object):
                     v.close_connections(vtest.direction(v))
         # check if this makes the hashi complete
         if all([v.complete for v in self.vertices]): self.complete = True
-        
-    def find_vertex_in_direction(self, v, direction):
-        # find a vertex in a given direction from a given vertex
-        # note: returns None if no vertex was found in the given direction
-        # note: only topology is taken into account, i.e. no check is done
-        #       on the status of the connection(s).
-        vidx, v = self.get(v)
-        candidate_indices = np.nonzero(self.topology[vidx,:]!=-1)[0]
-        candidates = [self.vertices[idx] for idx in candidate_indices]
-        for candidate in candidates:
-            if candidate.is_in_direction(v, direction): return candidate
-        return None

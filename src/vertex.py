@@ -2,10 +2,10 @@ import numpy as np
 
 class Vertex(object):
     # implementation of single vertex object.
-    # note: a Vertex has no knowledge of any topology or collection it might belong to,
-    #       it is only defined by its coordinates and local connections.
 
-    def __init__(self, x, y, n, multiplicity=2, connections=None):
+    def __init__(self, x, y, n, multiplicity=2, connections=None, neighbours=None):
+        ### initializer
+
         # copy attributes
         self.x = x
         self.y = y
@@ -30,6 +30,13 @@ class Vertex(object):
         else:
             # default case: all connections are initialized to 0 (allowed connection)
             self.connections = np.zeros(4*multiplicity).astype(int)
+        # initialize list of neighbouring vertices,
+        # i.e. vertices that are topologically connected with this one.
+        # note: convention is [up, right, down, left]
+        # note: use None as element in case there is no neighbour in that direction
+        # note: if not initialized, all elements are set to None
+        if neighbours is not None: self.neighbours = neighbours
+        else: self.neighbours = [None, None, None, None]
 
     def __str__(self):
         infostr = 'Vertex (x: {}, y: {}, n: {}'.format(self.x, self.y, self.n)
@@ -37,10 +44,48 @@ class Vertex(object):
         return infostr
     
     def copy(self):
+        # note: neighbours are not copied,
+        #       maybe change in the future if the need arises
         return Vertex(self.x, self.y, self.n, multiplicity=self.multiplicity, connections=np.copy(self.connections))
 
     def get_connections(self, direction):
+        ### get connections in a given direction
         return self.connections[self.multiplicity*direction : self.multiplicity*(direction+1)]
+
+    def get_neighbour(self, direction):
+        ### get neighbour vertex in a given direction
+        return self.neighbours[direction]
+
+    def neighbouring(self, other):
+        ### check if self and other are neighbours
+        # note: their relative direction can be retrieved with
+        #       self.direction(other) or the other way around.
+        if other in self.neighbours: return True
+        return False
+
+    def can_connect_with(self, other):
+        ### check if a connection can be made between self and other
+        # note: a connection can be made if
+        #       - the vertices are neighbours
+        #       - both vertices have at least one potential connection
+        #         in each others direction
+        if not self.neighbouring(other): return False
+        direction_other_wrt_self = other.direction(self)
+        direction_self_wrt_other = self.direction(other)
+        if direction_other_wrt_self < 0 or direction_self_wrt_other < 0: return False
+        if not self.has_potential_connection(direction_other_wrt_self): return False
+        if not other.has_potential_connection(direction_self_wrt_other): return False
+        return True
+
+    def is_connected_with(self, other):
+        ### check if a connection is established between self and other
+        if not self.neighbouring(other): return False
+        direction_other_wrt_self = other.direction(self)
+        direction_self_wrt_other = self.direction(other)
+        if direction_other_wrt_self < 0 or direction_self_wrt_other < 0: return False
+        if not self.has_established_connection(direction_other_wrt_self): return False
+        if not other.has_established_connection(direction_self_wrt_other): return False
+        return True
 
     def n_established_connections(self, direction):
         # count number of established connections in a given direction
@@ -125,7 +170,7 @@ class Vertex(object):
             print('WARNING: could not find enough connections to close.')
 
     def direction(self, other):
-        # get direction of self w.r.t. other
+        ### get direction of self w.r.t. other
         # self above other
         if( self.x==other.x and self.y>other.y ): return 0
         # self right from other
@@ -138,13 +183,16 @@ class Vertex(object):
         return -1
 
     def is_in_direction(self, other, direction):
-        # check if self is in a given direction w.r.t. other
+        ### check if self is in a given direction w.r.t. other
         if direction==self.direction(other): return True
         return False
 
     def find_closest(self, others, direction):
-        # find closest vertex among provided others in a given direction
+        ### find closest vertex among provided others in a given direction
         # note: returns None if no vertices in the given direction were found
+        # note: mostly intended as a helper function for initialization of the topology;
+        #       after initialization, the closest vertex in each direction
+        #       is stored in the neighbours attribute.
         candidates = [v for v in others if v.is_in_direction(self, direction)]
         if len(candidates)==0: return None
         distances = [np.sqrt((v.x-self.x)**2 + (v.y-self.y)**2) for v in candidates]
