@@ -13,7 +13,7 @@ import numpy as np
 
 
 def find_directions_to_connect(vertex):
-    # helper function to fill_vertex.
+    ### helper function to fill_vertex.
     # find connections that can be made (if any),
     # based only on vertex connection properties.
 
@@ -36,7 +36,8 @@ def find_directions_to_connect(vertex):
     # could potentially absorb all missing connections.
     for direction in vertex.directions_with_potential_connection():
         # calculate number of potential connections in other directions than this one
-        n_potential_other_directions = sum([vertex.n_potential_connections(d) for d in [0,1,2,3] if d!=direction])
+        n_potential_other_directions = sum([vertex.n_potential_connections(d)
+            for d in [0,1,2,3] if d!=direction])
         # at least the overflow must be filled in this direction
         overflow = n_needed - n_potential_other_directions
         if overflow>0:

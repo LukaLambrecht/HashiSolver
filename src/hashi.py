@@ -184,25 +184,12 @@ class Hashi(object):
             else: res[key] = [e]
         return res
 
-    def get_cluster(self, v, iterative=False):
-        # get a list of vertices that are connected to the given vertex
+    def get_cluster(self, v):
+        ### get the cluster of vertices that are connected to the given vertex
         vidx, v = self.get(v)
         cluster_ids = []
-        cluster_vertices = []
-        # case of non-iterative: just check which of the neighbours are connected
-        if not iterative:
-            for otheridx, othervertex in enumerate(self.vertices):
-                if v.is_connected_with(othervertex):
-                    cluster_ids.append(otheridx)
-                    cluster_vertices.append(othervertex)
-        # iterative case: find correct cluster
-        else:
-            cluster = self.cluster_lookup_table[vidx]
-            for otheridx, othervertex in enumerate(self.vertices):
-                if self.cluster_lookup_table[otheridx]==cluster:
-                    cluster_ids.append(otheridx)
-                    cluster_vertices.append(othervertex)
-        return (cluster_ids, cluster_vertices)
+        cluster = self.cluster_lookup_table[vidx]
+        return cluster
 
     def has_potential_connection(self, v1, v2):
         ### check if a connection between v1 and v2 could be made
